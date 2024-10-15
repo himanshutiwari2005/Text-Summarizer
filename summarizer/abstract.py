@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from nltk import word_tokenize
 import collections
 import hashlib
 import json
@@ -22,7 +21,6 @@ def text_to_word_sequence(
     lower=True,
     split=" ",
 ):
-    """DEPRECATED."""
     if lower:
         input_text = input_text.lower()
 
@@ -34,7 +32,6 @@ def text_to_word_sequence(
     return [i for i in seq if i]
 
 class Tokenizer(object):
-    """DEPRECATED."""
 
     def __init__(
         self,
@@ -235,36 +232,6 @@ class Tokenizer(object):
                     raise ValueError("Unknown vectorization mode:", mode)
         return x
 
-    def get_config(self):
-        json_word_counts = json.dumps(self.word_counts)
-        json_word_docs = json.dumps(self.word_docs)
-        json_index_docs = json.dumps(self.index_docs)
-        json_word_index = json.dumps(self.word_index)
-        json_index_word = json.dumps(self.index_word)
-
-        return {
-            "num_words": self.num_words,
-            "filters": self.filters,
-            "lower": self.lower,
-            "split": self.split,
-            "char_level": self.char_level,
-            "oov_token": self.oov_token,
-            "document_count": self.document_count,
-            "word_counts": json_word_counts,
-            "word_docs": json_word_docs,
-            "index_docs": json_index_docs,
-            "index_word": json_index_word,
-            "word_index": json_word_index,
-        }
-
-    def to_json(self, **kwargs):
-        config = self.get_config()
-        tokenizer_config = {
-            "class_name": self.__class__.__name__,
-            "config": config,
-        }
-        return json.dumps(tokenizer_config, **kwargs)
-
 
 #Working with data
 
@@ -275,6 +242,19 @@ data.drop(['Source ', 'Time ', 'Publish Date'], axis=1, inplace=True)
 short = data['Short']
 summary = data['Headline']
 
+# Since < and > from default tokens cannot be removed
+filters = '!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n'
+oov_token = '<unk>'
+
 # for decoder sequence
 summary = summary.apply(lambda x: '<go> ' + x + '<stop>')
-short = short.apply(word_tokenize)
+
+short_tokenizer = Tokenizer(oov_token=oov_token)
+summary_tokenizer = Tokenizer(filters=filters, oov_token=oov_token)
+
+short_tokenizer.fit_on_texts(short)
+summary_tokenizer.fit_on_texts(summary)
+
+inputs = short_tokenizer.texts_to_sequences(short)
+targets = summary_tokenizer.texts_to_sequences(summary)
+
