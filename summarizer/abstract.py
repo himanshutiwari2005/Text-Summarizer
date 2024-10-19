@@ -4,6 +4,7 @@ import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import tensorflow as tf
+import keras as kr
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -257,4 +258,59 @@ summary_tokenizer.fit_on_texts(summary)
 
 inputs = short_tokenizer.texts_to_sequences(short)
 targets = summary_tokenizer.texts_to_sequences(summary)
+
+# Vocab size
+encoder_vocab_size = len(short_tokenizer.word_index) + 1
+decoder_vocab_size = len(summary_tokenizer.word_index) + 1
+
+"""Finding max length
+Taking values >= to the 75th percentile by rounding off"""
+
+# short_len = pd.Series([len(x) for x in short])
+# summary_len = pd.Series([len(x) for x in summary])
+
+# print(short_len.describe())
+"""
+count    55104.000000
+mean       368.003049
+std         26.235510
+min        280.000000
+25%        350.000000
+50%        369.000000
+75%        387.000000
+max        469.000000
+
+"""
+
+print(">>>>>>>>>>>>>")
+
+# print(summary_len.describe())
+"""
+count    55104.000000
+mean        62.620282
+std          7.267463
+min         19.000000
+25%         58.000000
+50%         62.000000
+75%         68.000000
+max         95.000000
+"""
+
+
+encoder_max_len = 400
+decoder_max_len = 75
+
+# Truncating sequences for identical sequence lengths
+inputs = kr.preprocessing.sequence.pad_sequences(inputs, maxlen=encoder_max_len, padding='post', truncating='post')
+targets = kr.preprocessing.sequence.pad_sequences(targets, maxlen=decoder_max_len, padding='post', truncating='post')
+
+# Creating dataset pipeline
+
+inputs = tf.cast(inputs, dtype=tf.int32)
+targets = tf.cast(targets, dtype=tf.int32)
+
+BUFFER_SIZE = 20_000
+BATCH_SIZE = 64
+
+dataset = tf.data.Dataset.from_tensor_slices((inputs, targets)).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 
