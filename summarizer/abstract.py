@@ -556,3 +556,10 @@ class Transformer(kr.Model):
         
         return final_output, attention_weights
     
+# Training
+num_layers = 4
+d_model = 128
+dff = 512
+num_heads = 8
+epochs = 125
+
