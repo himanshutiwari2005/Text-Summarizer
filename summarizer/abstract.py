@@ -583,3 +583,13 @@ learning_rates = CustomLearningSchedule(d_model)
 optimizer = kr.optimizers.Adam(learning_rates, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
 loss_object = kr.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none')
 
+def LossFunction(real, pred):
+    mask = tf.math.logical_not(tf.math.equal(real,0))
+    loss = loss_object(real, pred)
+    
+    mask = tf.cast(mask, dtype=loss.dtype)
+    loss *= mask
+    
+    return tf.reduce_sum(loss)/tf.reduce_sum(mask)
+
+train_loss = kr.metrics.Mean(names = 'train_loss')
