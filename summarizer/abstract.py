@@ -593,3 +593,11 @@ def LossFunction(real, pred):
     return tf.reduce_sum(loss)/tf.reduce_sum(mask)
 
 train_loss = kr.metrics.Mean(names = 'train_loss')
+
+# Transformer
+
+transformer = Transformer(num_layers, d_model, num_heads, dff,
+                          encoder_vocab_size, decoder_vocab_size,
+                          pe_input=encoder_vocab_size,
+                          pe_target=decoder_vocab_size)
+
