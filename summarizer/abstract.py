@@ -601,3 +601,14 @@ transformer = Transformer(num_layers, d_model, num_heads, dff,
                           pe_input=encoder_vocab_size,
                           pe_target=decoder_vocab_size)
 
+# Creating Masks
+
+def mask(inp, tar):
+    enc_mask = create_padding_mask(inp)
+    dec_mask = create_padding_mask(inp)
+    
+    lookahead_mask = create_lookahead_mask(tf.shape(tar)[1])
+    dec_tar_pad_mask = create_padding_mask(tar)
+    combined_mask = tf.maximum(dec_tar_pad_mask, lookahead_mask)
+    
+    return enc_mask, dec_mask, combined_mask
