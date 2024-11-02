@@ -16,6 +16,7 @@ import warnings
 
 # Function
 
+## Using deprecated functions
 def text_to_word_sequence(
     input_text,
     filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',
@@ -612,3 +613,40 @@ def mask(inp, tar):
     combined_mask = tf.maximum(dec_tar_pad_mask, lookahead_mask)
     
     return enc_mask, dec_mask, combined_mask
+
+
+# Making Checkpoints
+path = "ckpnts"
+
+ckpt = tf.train.Checkpoint(transformer, optimizer)
+manager = tf.train.CheckpointManager(ckpt, path, max_to_keep=10)
+
+if manager.latest_checkpoint:
+    ckpt.restore(manager.latest_checkpoint)
+    print('Latest checkpoint restored!')
+
+
+# Training steps
+
+@tf.function
+def train_step(inp, tar):
+    tar_inp = tar[:, :-1]
+    tar_real = tar[:, 1:]
+    
+    enc_mask, dec_mask, combined_mask = mask(inp, tar_inp)
+    
+    with tf.GradientTape() as tape:
+        predictions, _ = transformer(
+            inp, tar_inp,
+            True,
+            enc_mask,
+            combined_mask,
+            dec_mask
+        )
+        loss = LossFunction(tar_real, predictions)
+        
+    gradients = tape.gradient(loss, transformer.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, transformer.trainable_variables))
+    
+    train_loss(loss)
+    
