@@ -1,3 +1,6 @@
+#Import the libraries
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -6,13 +9,13 @@ import keras
 # Load your data
 data = pd.read_excel('summarizer/Data/news.xlsx') 
 
-texts = data['text'].values  
-summaries = data['summary'].values  
+texts = data['Short'].values  
+summaries = data['Headline'].values  
 
 # Define parameters
 max_tokens = 10_000 
 max_len_text = 500 
-max_len_summary = 100  
+max_len_summary = 500
 
 # Create TextVectorization layers
 text_vectorizer = keras.layers.TextVectorization(max_tokens=max_tokens, output_mode='int', output_sequence_length=max_len_text)
@@ -51,5 +54,5 @@ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=
 y_shifted = np.zeros_like(y)
 y_shifted[:, :-1] = y[:, 1:]
 
-model.fit([X, y_shifted], np.expand_dims(y, -1), batch_size=64, epochs=125)
+model.fit([X, y_shifted], np.expand_dims(y, -1), batch_size=16, epochs=2)
 model.save('summariser.keras')
