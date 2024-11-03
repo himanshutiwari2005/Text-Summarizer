@@ -283,8 +283,6 @@ max        469.000000
 
 """
 
-print(">>>>>>>>>>>>>")
-
 # print(summary_len.describe())
 """
 count    55104.000000
